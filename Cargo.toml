@@ -1,0 +1,15 @@
+[package]
+name = "project_forest_fire"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rand = "0.9.1"
+
+[dev-dependencies]
+approx = "0.5"
+
+
+[lib]
+name = "project_forest_fire"
+path = "src/lib.rs"
