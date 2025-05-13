@@ -15,25 +15,33 @@ pub struct Config {
     pub density: f64,
     pub simulations: usize,
     pub burn_pattern: BurnPattern,
-    pub display_grid: bool,
+    pub graphics: bool,
+    pub frame_delay_ms: u64,
 }
 
 impl Config {
     pub fn new(args: &[String]) -> Result<Self, String> {
         let mut config = Config {
-            size: 50,
+            size: 20,
             density: 0.6,
-            simulations: 100,
+            simulations: 1,
             burn_pattern: BurnPattern::Moore(MooreNeighborhood),
-            display_grid: false,
+            graphics: true,
+            frame_delay_ms: 50,
         };
 
+        // .skip(1) to ignore the program name
         let mut args_iter = args.iter().skip(1);
 
         while let Some(arg) = args_iter.next() {
             match arg.as_str() {
                 "-s" | "--size" => {
+                    // parse_arg will take <T> based on the type the variable is
+                    // so instead of doing:
+                    // config.size = parse_arg::<usize>(&mut args_iter, "size")?;
+                    // we can just do:
                     config.size = parse_arg(&mut args_iter, "size")?;
+                    // and the compiler will tell the parse_arg that it should take <usize>
                 }
                 "-d" | "--density" => {
                     config.density = parse_arg(&mut args_iter, "density")?;
@@ -52,8 +60,14 @@ impl Config {
                         _ => return Err("Invalid burn pattern. Use 'moore' or 'vonneumann'".into()),
                     };
                 }
-                "-g" | "--display-grid" => {
-                    config.display_grid = true;
+                "-g-off" | "--graphics-off" => {
+                    config.graphics = false;
+                }
+                "-fd" | "--frame-delay" => {
+                    config.frame_delay_ms = parse_arg(&mut args_iter, "frame-delay")?;
+                    if !(1..=10_000).contains(&config.frame_delay_ms) {
+                        return Err("Frame delay must be between 1 and 10 000 ms".into());
+                    }
                 }
                 _ => return Err(format!("Unknown argument: {}", arg)),
             }
@@ -63,13 +77,16 @@ impl Config {
     }
 }
 
+/// Helper function: takes an iterator over arguments and a name for error messages.
+///
+/// It advances the iterator to get the next element and attempts to parse it into T.
 fn parse_arg<T: std::str::FromStr>(
     args_iter: &mut dyn Iterator<Item = &String>,
     arg_name: &str,
 ) -> Result<T, String> { // Result<T, &'static str>
     args_iter.next()
         .ok_or_else(|| format!("Missing value for {}", arg_name))?
-        .parse()
+        .parse::<T>()// parse into the requested type
         .map_err(|_| format!("Invalid value for {}", arg_name))
 }
 
@@ -92,7 +109,7 @@ mod tests {
         assert_eq!(config.density, 0.6);
         assert_eq!(config.simulations, 100);
         assert!(matches!(config.burn_pattern, BurnPattern::Moore(MooreNeighborhood)));
-        assert!(!config.display_grid);
+        assert!(!config.graphics);
     }
 
     #[test]
@@ -110,7 +127,7 @@ mod tests {
         assert!((config.density - 0.7).abs() < f64::EPSILON);
         assert_eq!(config.simulations, 500);
         assert!(matches!(config.burn_pattern, BurnPattern::VonNeumann(VonNeumannNeighborhood)));
-        assert!(config.display_grid);
+        assert!(config.graphics);
     }
 
     #[test]

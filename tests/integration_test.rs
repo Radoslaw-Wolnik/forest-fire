@@ -13,5 +13,6 @@ fn test_full_workflow() {
     let results = run_simulations(&config);
 
     assert!(results.average_burned > 0.0);
-    assert!(results.optimal_density >= 0.0 && results.optimal_density <= 1.0);
+    assert!(results.min_burned >= 0.0 && results.min_burned <= 1.0);
+    assert!(results.max_burned >= 0.0 && results.max_burned <= 1.0);
 }

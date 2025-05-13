@@ -2,6 +2,7 @@ mod config;
 mod forest;
 mod simulation;
 mod fire_spread;
+mod display;
 
 use config::Config;
 use simulation::run_simulations;
@@ -23,6 +24,8 @@ fn main() {
     println!("Grid size: {}", config.size);
     println!("Tree density: {:.2}", config.density);
     println!("Burn pattern: {:?}", config.burn_pattern);
-    println!("Average burned: {:.1}%", results.average_burned);
-    println!("Optimal density: {:.2}", results.optimal_density);
+    println!("Min burned: {:.2}%", results.min_burned);
+    println!("Max burned: {:.2}%", results.max_burned);
+    println!("Average burned: {:.2}%", results.average_burned);
+
 }

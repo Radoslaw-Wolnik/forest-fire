@@ -1,8 +1,8 @@
 use std::collections::VecDeque;
 use std::fmt;
 use rand::Rng;
+use rand::seq::SliceRandom;
 use crate::fire_spread::FireSpreadStrategy;
-
 
 // Cell states
 #[derive(Clone, Copy, PartialEq)]
@@ -13,77 +13,108 @@ pub enum CellState {
     Burned,
 }
 
+// size 1-1000 ? What is max size to store in memory?
+// when not using Vec but lists
 pub struct Forest {
-    grid: Vec<Vec<CellState>>,
-    size: usize,
+    pub size: usize,
+    pub grid: Vec<Vec<CellState>>,
+    fire_front: VecDeque<(usize, usize)>,
+    pub burned_count: usize,
+    pub total_trees: usize,
 }
 
 impl Forest {
     pub fn new(size: usize, density: f64) -> Self {
-        let mut rng = rand::rng();
-        let grid = (0..size)
-            .map(|_| (0..size)
-                .map(|_| if rng.random_bool(density) {
-                    CellState::Tree
-                } else {
-                    CellState::Empty
-                })
-                .collect())
+        let total_cells = size * size;
+        // compute exact number of trees (round to nearest)
+        let target_trees = (density * total_cells as f64).round() as usize;
+
+        // start with an all-empty grid
+        let mut grid = vec![vec![CellState::Empty; size]; size];
+
+        let mut indices: Vec<(usize, usize)> = (0..size)
+            .flat_map(|x| (0..size).map(move |y| (x, y)))
             .collect();
 
-        Forest { grid, size }
+        let mut rng = rand::rng();
+        indices.shuffle(&mut rng);
+
+        for &(x, y) in indices.iter().take(target_trees) {
+            grid[x][y] = CellState::Tree;
+        }
+
+        // if you still want to track the count:
+        let total_trees = target_trees;
+
+        Forest {
+            size,
+            grid,
+            fire_front: VecDeque::new(),
+            burned_count: 0,
+            total_trees,
+        }
     }
 
-    pub fn simulate_fire(
-        &mut self,
-        strategy: &dyn FireSpreadStrategy,
-        start_pos: Option<(usize, usize)>,
-    ) -> f64 {
-        let total_trees = self.count_trees();
-        if total_trees == 0 {
-            return 0.0;
-        }
-
-        let mut fire_front = VecDeque::new();
-        let (x, y) = start_pos.unwrap_or_else(|| self.random_strike());
-
+    pub fn ignite(&mut self, pos: Option<(usize, usize)>) -> bool {
+        let (x, y) = pos.unwrap_or_else(|| self.random_strike());
         if self.grid[x][y] == CellState::Tree {
             self.grid[x][y] = CellState::Burning;
-            fire_front.push_back((x, y));
+            self.fire_front.push_back((x, y));
         }
+        !self.fire_front.is_empty()
+    }
 
-        let mut total_burned = 0;
+    pub fn pick_random_tree(&self) -> Option<(usize, usize)> {
+        let mut rng = rand::rng();
+        let mut selected: Option<(usize, usize)> = None;
+        let mut count = 0;
 
-        while !fire_front.is_empty() {
-            let current_burning = fire_front.drain(..).collect::<Vec<_>>();
-
-            for (x, y) in current_burning {
-                total_burned += 1;
-                self.grid[x][y] = CellState::Burned;
-
-                for (nx, ny) in strategy.spread(x, y, self.size) {
-                    if self.grid[nx][ny] == CellState::Tree {
-                        self.grid[nx][ny] = CellState::Burning;
-                        fire_front.push_back((nx, ny));
+        for (x, row) in self.grid.iter().enumerate() {
+            for (y, cell) in row.iter().enumerate() {
+                if *cell == CellState::Tree {
+                    count += 1;
+                    // Replace with probability 1/count
+                    if rng.random_range(0..count) == 0 {
+                        selected = Some((x, y));
                     }
                 }
             }
         }
 
-        total_burned as f64 / total_trees as f64
+        selected
     }
 
-    fn count_trees(&self) -> usize {
-        self.grid.iter()
-            .flatten()
-            .filter(|&&cell| cell == CellState::Tree)
-            .count()
+
+    pub fn fire_spread(&mut self, strategy: &dyn FireSpreadStrategy) -> bool {
+        if self.fire_front.is_empty() {
+            return false;
+        }
+
+        let current_burning = self.fire_front.drain(..).collect::<Vec<_>>();
+
+        for (x, y) in current_burning {
+            self.burned_count += 1;
+            self.grid[x][y] = CellState::Burned;
+
+            for (nx, ny) in strategy.spread(x, y, self.size) {
+                if nx < self.size && ny < self.size && self.grid[nx][ny] == CellState::Tree {
+                    self.grid[nx][ny] = CellState::Burning;
+                    self.fire_front.push_back((nx, ny));
+                }
+            }
+        }
+
+        self.fire_front.is_empty()
     }
 
     fn random_strike(&self) -> (usize, usize) {
         let mut rng = rand::rng();
         let (x, y) = (rng.random_range(0..self.size), rng.random_range(0..self.size));
         (x, y)
+    }
+
+    pub fn density(&self) -> f64 {
+         self.total_trees as f64 / (self.size * self.size) as f64
     }
 }
 
@@ -92,10 +123,11 @@ impl fmt::Display for Forest {
         for row in &self.grid {
             for cell in row {
                 write!(f, "{}", match cell {
-                    CellState::Empty => " ",
-                    CellState::Tree => "🌲",
+                    CellState::Empty => "  ", // 🟩❇️🌾🌿🌻
+                    CellState::Tree => "🌲", // 🌳🌴
                     CellState::Burning => "🔥",
-                    CellState::Burned => "◼️",
+                    CellState::Burned => "◼️", // 🪨
+                    // CellState::Lightning => "⚡️",
                 })?;
             }
             writeln!(f)?;
@@ -113,48 +145,9 @@ mod tests {
     use crate::fire_spread::{MooreNeighborhood, VonNeumannNeighborhood};
 
     #[test]
-    fn test_empty_forest() {
-        let mut forest = Forest::new(10, 0.0);
-        let burned = forest.simulate_fire(&MooreNeighborhood, None);
-        assert_relative_eq!(burned, 0.0);
-    }
-
-    #[test]
-    fn test_full_burn_moore() {
-        let mut forest = Forest::new(3, 1.0, );
-        let burned = forest.simulate_fire(&MooreNeighborhood, Some((1, 1)));
-        assert_relative_eq!(burned, 1.0);
-    }
-
-    #[test]
-    fn test_von_neumann_spread() {
-        let mut forest = Forest {
-            grid: vec![
-                vec![CellState::Tree; 3],
-                vec![CellState::Tree, CellState::Tree, CellState::Tree],
-                vec![CellState::Tree, CellState::Tree, CellState::Tree],
-            ],
-            size: 3
-        };
-
-        // Manually set center cell on fire
-        // forest.grid[1][1] = CellState::Burning;
-
-        let burned = forest.simulate_fire(&MooreNeighborhood, Some((1, 1)));
-        assert_relative_eq!(burned, 1.0);
-    }
-
-    #[test]
-    fn test_edge_ignition() {
-        let mut forest = Forest::new(3, 1.0);
-        let burned = forest.simulate_fire(&VonNeumannNeighborhood, Some((0, 0)));
-        assert_relative_eq!(burned, 1.0);
-    }
-
-    #[test]
     fn test_tree_count() {
-        let forest = Forest::new(100, 0.5);
-        let tree_count = forest.count_trees();
+        let forest:Forest = Forest::new(100, 0.5);
+        let tree_count = forest.total_trees;
         assert!(tree_count > 4000 && tree_count < 6000);
     }
 }

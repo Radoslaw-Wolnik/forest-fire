@@ -20,7 +20,7 @@ A Rust implementation of a forest fire spread simulation based on a grid model. 
 1. Ensure [Rust](https://www.rust-lang.org/tools/install) and Cargo are installed.
 2. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/forest-fire-simulation.git
+   git clone https://github.com/radoslawwolnik/project-forest-fire.git
    ```
 3. Build the project:
    ```bash
@@ -36,7 +36,7 @@ cargo run -- [GRID_SIZE] [TREE_PROBABILITY] [SIMULATION_COUNT]
 ```
 Example:
 ```bash
-cargo run -- 50 0.6 1000
+cargo run -- --size 30 --density 0.4 --simulations 1
 ```
 This simulates a 50x50 forest with 60% tree density across 1000 trials.
 
@@ -74,7 +74,7 @@ Adjust these parameters via CLI arguments or a config file (TODO):
 ### Grid Representation
 - 2D array of `CellState` enums:
   ```rust
-  enum CellState { Empty, Tree, Burning }
+  enum CellState { Empty, Tree, Burning, Burned }
   ```
 - Initialized with random trees based on spawn probability.
 
@@ -89,25 +89,6 @@ Adjust these parameters via CLI arguments or a config file (TODO):
   Score = (Forestation %) - (Average Burned %)
   ```
 
----
-
-## Possible Extensions
-1. **Graphical Interface**
-    - Simple terminal UI with `crossterm` or `ratatui`
-    - Web frontend using WASM + React (pass JSON data from Rust backend)
-2. **Advanced Parameters**
-    - Wind direction/speed affecting fire spread
-    - Tree age and resistance to burning
-3. **Statistical Charts**
-    - Generate plots of density vs. burn percentage using `plotters`
-
----
-
-## Contributing
-Contributions are welcome! Open an issue or PR for:
-- Bug fixes
-- Performance improvements
-- New features (see *Possible Extensions*)
 
 ---
 
