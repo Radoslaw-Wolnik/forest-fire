@@ -96,7 +96,6 @@ pub fn run_simulations(config: &Config) -> SimulationResults {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use approx::assert_relative_eq;
     use crate::fire_spread::MooreNeighborhood;
 
     #[test]

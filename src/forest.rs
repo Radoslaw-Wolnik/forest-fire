@@ -141,8 +141,6 @@ impl fmt::Display for Forest {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use approx::assert_relative_eq;
-    use crate::fire_spread::{MooreNeighborhood, VonNeumannNeighborhood};
 
     #[test]
     fn test_tree_count() {
