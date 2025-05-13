@@ -8,11 +8,11 @@ A Rust implementation of a forest fire spread simulation based on a grid model. 
 - **Grid-based forest model** with customizable dimensions.
 - **Random tree generation** with adjustable density.
 - **Fire spread simulation** using Moore neighborhood (8-directional spread).
-- **CLI visualization** of the forest before/after the fire.
+- **CLI visualization** of the forest before/after and during the fire.
 - **Statistical analysis** of burned area percentage.
-- **Multiple simulation runs** to calculate optimal tree density for minimal fire loss.
+- **Multiple simulation runs** to calculate min max and avg.
 - **Configurable parameters** (grid size, tree spawn probability, etc.).
-- *Optional extensions*: Wind direction, tree age/resistance, graphical interface.
+- *Optional extensions*: Wind direction, tree age/resistance river and rock tiles.
 
 ---
 
@@ -30,64 +30,91 @@ A Rust implementation of a forest fire spread simulation based on a grid model. 
 ---
 
 ## Usage
-Run the simulation with optional parameters:
-```bash
-cargo run -- [GRID_SIZE] [TREE_PROBABILITY] [SIMULATION_COUNT]
+
+```text
+USAGE:
+    forest_fire_sim [OPTIONS]
+
+OPTIONS:
+    -s, --size <size>              Grid size (default: 20)
+    -d, --density <density>        Tree density between 0.0 and 1.0 (default: 0.6)
+    -c, --simulations <count>      Number of simulations to run (default: 1)
+    -b, --burn-pattern <pattern>   Burn pattern: 'moore' or 'vonneumann' (default: moore)
+    -g-off, --graphics-off         Disable graphical output (default: enabled)
+    -fd, --frame-delay <ms>        Frame delay in milliseconds (1 to 10000, default: 50)
+    -h, --help                     Print this help message
 ```
-Example:
+
+#### 🔍 Description:
+
+* `size`: Sets the width and height of the grid. For example, `-s 100` creates a 100x100 grid.
+* `density`: A float between 0.0 and 1.0 indicating how densely the trees are populated.
+* `simulations`: Number of independent simulation runs.
+* `burn-pattern`: Choose how fire spreads:
+
+    * `moore` (default) – fire spreads in 8 directions (N, NE, E, SE, S, SW, W, NW)
+    * `vonneumann` – fire spreads in 4 directions (N, E, S, W)
+* `graphics-off`: Disables graphical visualization of the simulation.
+* `frame-delay`: Delay in milliseconds between animation frames when graphics is enabled.
+
+#### Example:
 ```bash
-cargo run -- --size 30 --density 0.4 --simulations 1
+cargo run -- --size 30 --density 0.4 --simulations 1 
 ```
-This simulates a 50x50 forest with 60% tree density across 1000 trials.
+This simulates a 30x30 forest with 40% tree density across 1 trial with graphical representation.
+
+```bash
+cargo run -- -g-off -c 100 -s 100 -d 0.42
+```
+This simulates a 100x100 forest with 42% tree density across 100 trials without graphic (for speed).
+
 
 ### Sample Output
 ```
-Initial Forest (5x5):
-. T . T T
-T . T . T
-. T T T .
-T . . T .
-T T . T .
+Initial Forest:
+🌲  🌲
+  🌲🌲🌲
+🌲🔥🌲
+    🌲  🌲
+        🌲
+
 
 Burned Forest:
-. X . X X
-X . X . X
-. X X X .
-X . . X .
-X X . X .
+◼️  ◼️
+  ◼️◼️◼️
+◼️◼️◼️
+    ◼️  🌲
+        🌲
 
-Burned: 68.0% of trees
-Optimal density: ~58.2% (minimizes fire loss)
+
+Simulation Results:
+-------------------
+Grid size: 5
+Tree density: 0.45
+Burn pattern: Moore(MooreNeighborhood)
+Min burned: 81.82%
+Max burned: 81.82%
+Average burned: 81.82%
+
 ```
 
 ---
 
-## Configuration
-Adjust these parameters via CLI arguments or a config file (TODO):
-- `GRID_SIZE`: Forest dimensions (N x N)
-- `TREE_PROBABILITY`: Chance for a cell to contain a tree (0.0-1.0)
-- `FIRE_SPREAD_RULE`: Moore (8-directional) or von Neumann (4-directional) neighborhood
-
----
 
 ## Implementation Details
 ### Grid Representation
-- 2D array of `CellState` enums:
+- 2D Vec<> of `CellState` enums:
   ```rust
   enum CellState { Empty, Tree, Burning, Burned }
   ```
 - Initialized with random trees based on spawn probability.
 
 ### Fire Spread Algorithm
-1. Random lightning strike ignites a tree (if present).
+1. Random tree is chosen to be ignited.
 2. Burning trees spread fire to adjacent cells in each iteration.
 3. Simulation continues until no burning trees remain.
 
-### Optimization Analysis
-- Runs multiple simulations to determine tree density that maximizes:
-  ```
-  Score = (Forestation %) - (Average Burned %)
-  ```
+
 
 
 ---

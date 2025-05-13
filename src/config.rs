@@ -69,6 +69,22 @@ impl Config {
                         return Err("Frame delay must be between 1 and 10 000 ms".into());
                     }
                 }
+
+                "-h" | "--help" => {
+                    return Err(
+                    "Usage: forest_fire_sim [OPTIONS]
+
+                    Options:
+                        -s, --size <size>              Grid size (default: 20)
+                        -d, --density <density>        Tree density between 0.0 and 1.0 (default: 0.6)
+                        -c, --simulations <count>      Number of simulations to run (default: 1)
+                        -b, --burn-pattern <pattern>   Burn pattern: 'moore' or 'vonneumann' (default: moore)
+                        -g-off, --graphics-off         Disable graphical output (default: enabled)
+                        -fd, --frame-delay <ms>        Frame delay in milliseconds (1 to 10000, default: 50)
+                        -h, --help                     Print this help message"
+                    .into()
+                    );
+                }
                 _ => return Err(format!("Unknown argument: {}", arg)),
             }
         }
