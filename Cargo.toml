@@ -5,11 +5,7 @@ edition = "2024"
 
 [dependencies]
 rand = "0.9.1"
-crossterm = "0.26"
-
-[dev-dependencies]
-approx = "0.5"
-
+crossterm = "0.29.0"
 
 [lib]
 name = "project_forest_fire"
