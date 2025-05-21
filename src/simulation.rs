@@ -30,7 +30,7 @@ pub fn run_simulations(config: &Config) -> SimulationResults {
 
         if forest.total_trees == 0 {
             continue;
-            // or return idk
+            // or return - not sure
         }
 
         forest.ignite(forest.pick_random_tree());

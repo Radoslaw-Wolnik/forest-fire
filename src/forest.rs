@@ -13,8 +13,6 @@ pub enum CellState {
     Burned,
 }
 
-// size 1-1000 ? What is max size to store in memory?
-// when not using Vec but lists
 pub struct Forest {
     pub size: usize,
     pub grid: Vec<Vec<CellState>>,
@@ -43,7 +41,7 @@ impl Forest {
             grid[x][y] = CellState::Tree;
         }
 
-        // if you still want to track the count:
+        // track the count:
         let total_trees = target_trees;
 
         Forest {
