@@ -86,7 +86,7 @@ pub fn run_simulations(config: &Config) -> SimulationResults {
     }
 
     SimulationResults {
-        average_burned: ( total_burned as f64 / total_trees as f64 ) / config.simulations as f64 * 100.0,
+        average_burned: ( total_burned as f64 / total_trees as f64 ) * 100.0,
         min_burned: min_burned * 100.0,
         max_burned: max_burned * 100.0,
     }
