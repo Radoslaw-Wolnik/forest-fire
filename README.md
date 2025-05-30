@@ -88,6 +88,8 @@ OPTIONS:
     -b, --burn-pattern <pattern>   'moore' (8-dir) or 'vonneumann' (4-dir). Default: moore
     -g-off, --graphics-off         Disable CLI animation. Default: graphics on
     -fd, --frame-delay <ms>        Frame delay in ms when animating. Default: 50
+    -a, --auto-sweep               Automatic mode with default step between densities = 0.05
+    -ss --sweep-step <step>        Automatic mode with setting the step between the densities (between 0.01 and 0.2)
     -q, --quiet                    Print only average burned (raw float)
     -h, --help                     Show this help message
 ```
@@ -146,16 +148,11 @@ enum CellState { Empty, Tree, Burning, Burned }
     - Von Neumann: Cardinal directions only
 3. Simulation terminates when firefront extinguishes
 
-### Performance
-- Single-threaded processing of 100x100 grid: ~15ms/trial
-- Memory efficient: ~100KB per 100x100 grid
-- Batch mode processes 10k trials/min (2.5GHz CPU)
-
 ## Optimization Highlights
 - **O(1) tree counting**: Maintains exact tree count during generation
 - **Firefront queue**: Processes only burning cells each iteration
 - **Reservoir sampling**: Efficient random tree selection for ignition
-- **Terminal optimizations**: Double-buffered rendering with crossterm
+- **Terminal optimizations**: Double-buffered rendering with crossterm (linux compatible)
 
 ## Testing
 
