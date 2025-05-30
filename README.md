@@ -4,10 +4,18 @@ A Rust-based forest fire spread simulator that models fire propagation in a proc
 After a lightning strike ignites a random tree, fire spreads according to a configurable neighborhood strategy, 
 and the simulation reports statistics on burned area across multiple runs.
 
-![Fire Spread Visualization](docs/moore_sim_02.mp4) *Example simulation with Moore neighborhood*
+<table>
+  <tr>
+    <td><img src="docs/moore_sim_gif.gif" alt="Moore simulation" width="300"/></td>
+    <td><img src="docs/vonneumann_sim_gif.gif" alt="Von Neumann simulation" width="300"/></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Example simulation with Moore neighborhood</em></td>
+    <td align="center"><em>Example simulation with Von Neumann neighborhood</em></td>
+  </tr>
+</table>
 
 
----
 ## Features
 - **Grid-based forest model** with customizable dimensions
 - **Procedural generation** with adjustable tree density
