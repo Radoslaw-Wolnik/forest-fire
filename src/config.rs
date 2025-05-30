@@ -2,7 +2,7 @@
 use crate::fire_spread::{MooreNeighborhood, VonNeumannNeighborhood};
 
 // Burn pattern options
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum BurnPattern {
     Moore(MooreNeighborhood),      // 8-directional
     VonNeumann(VonNeumannNeighborhood), // 4-directional
@@ -10,6 +10,7 @@ pub enum BurnPattern {
 
 
 // Configuration structure
+#[derive(Debug, Clone, Copy)]
 pub struct Config {
     pub size: usize,
     pub density: f64,
@@ -17,6 +18,9 @@ pub struct Config {
     pub burn_pattern: BurnPattern,
     pub graphics: bool,
     pub frame_delay_ms: u64,
+    pub quiet: bool,
+    pub auto_sweep: bool,
+    pub sweep_step: Option<f64>,
 }
 
 impl Config {
@@ -28,6 +32,9 @@ impl Config {
             burn_pattern: BurnPattern::Moore(MooreNeighborhood),
             graphics: true,
             frame_delay_ms: 50,
+            quiet: false,
+            auto_sweep: false,
+            sweep_step: None,
         };
 
         // .skip(1) to ignore the program name
@@ -63,6 +70,9 @@ impl Config {
                 "-g-off" | "--graphics-off" => {
                     config.graphics = false;
                 }
+                "-q" | "--quiet" => {
+                    config.quiet = true;
+                }
                 "-fd" | "--frame-delay" => {
                     config.frame_delay_ms = parse_arg(&mut args_iter, "frame-delay")?;
                     if !(1..=10_000).contains(&config.frame_delay_ms) {
@@ -70,6 +80,18 @@ impl Config {
                     }
                 }
 
+                "--auto-sweep" | "-a" => {
+                    config.auto_sweep = true;
+                }
+                "--sweep-step" | "-ss" => {
+                    let step: f64 = parse_arg(&mut args_iter, "sweep-step")?;
+                    if !(0.01..=0.2).contains(&step) {
+                        return Err(
+                            "Step between densities in simulation must be between 0.01 and 0.2".into()
+                        );
+                    }
+                    config.sweep_step = Some(step);
+                }
                 "-h" | "--help" => {
                     return Err(
 "Usage: forest_fire_sim [OPTIONS]
@@ -81,6 +103,8 @@ Options:
     -b, --burn-pattern <pattern>   Burn pattern: 'moore' or 'vonneumann' (default: moore)
     -g-off, --graphics-off         Disable graphical output (default: enabled)
     -fd, --frame-delay <ms>        Frame delay in milliseconds (1 to 10000, default: 50)
+    -a, --auto-sweep               Automatic mode with default step between densities = 0.05
+    -ss --sweep-step <step>        Automatic mode with setting the step between the densities (between 0.01 and 0.2)
     -h, --help                     Print this help message"
                     .into()
                     );

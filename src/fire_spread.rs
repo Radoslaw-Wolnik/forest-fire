@@ -4,9 +4,9 @@ pub trait FireSpreadStrategy {
     fn spread(&self, x: usize, y: usize, size: usize) -> Vec<(usize, usize)>;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct MooreNeighborhood;
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct VonNeumannNeighborhood;
 
 impl FireSpreadStrategy for MooreNeighborhood {
