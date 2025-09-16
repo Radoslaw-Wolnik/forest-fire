@@ -4,6 +4,7 @@ mod simulation;
 mod fire_spread;
 mod display;
 
+use std::time::Instant;
 use config::Config;
 use simulation::run_simulations;
 
@@ -16,6 +17,7 @@ fn main() {
             std::process::exit(1);
         }
     };
+    let start = Instant::now();
     if config.auto_sweep {
         // Handle missing step parameter
         let step = config.sweep_step.unwrap_or_else(|| {
@@ -45,6 +47,8 @@ fn main() {
                 break;
             }
         }
+        let elapsed = start.elapsed();
+        println!("Elapsed time: {:.2?}", elapsed);
         std::process::exit(0); // Exit after sweep completes
     }
 
@@ -61,5 +65,7 @@ fn main() {
         println!("Min burned: {:.2}%", results.min_burned);
         println!("Max burned: {:.2}%", results.max_burned);
         println!("Average burned: {:.2}%", results.average_burned);
+        let elapsed = start.elapsed();
+        println!("Elapsed time: {:.2?}", elapsed);
     }
 }
